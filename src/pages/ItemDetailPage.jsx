@@ -1,0 +1,350 @@
+import { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  Minus,
+  Plus,
+  Flame,
+  Sparkles,
+  Star,
+  ShoppingBag,
+  Send,
+  User,
+  MessageSquare,
+  Clock,
+} from "lucide-react";
+import VegBadge from "../components/VegBadge";
+import Stars from "../components/Stars";
+import ReviewCard from "../components/ReviewCard";
+import { useCart } from "../context/CartContext";
+import { getItemReviews, submitReview } from "../lib/api";
+import { isItemOrderableNow, getUnavailableReason } from "../lib/timeRestrictions";
+import { useSEO } from "../lib/seo";
+
+const SPICE_LABEL = { mild: "Mild", medium: "Medium", spicy: "Spicy" };
+
+export default function ItemDetailPage({ item, onBack, onToast, onGoToCart }) {
+  useSEO({
+    title: item
+      ? `${item.name} | Raffick Cafe`
+      : "Menu Item | Raffick Cafe",
+    description: item
+      ? `${item.name}${item.description ? " - " + item.description : ""} — order online from Raffick Cafe, Sattur. Takeaway & home delivery available.`
+      : "Order this dish online from Raffick Cafe, Sattur.",
+    path: item ? `/item/${item.id}` : undefined,
+  });
+
+  const { addItem } = useCart();
+  const [variant, setVariant] = useState(item?.variants?.[0] || null);
+  const [qty, setQty] = useState(1);
+  const [reviews, setReviews] = useState([]);
+  const [form, setForm] = useState({ name: "", rating: 5, comment: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [hoveredStar, setHoveredStar] = useState(0);
+
+  useEffect(() => {
+    if (item) getItemReviews(item.id).then(setReviews);
+    setVariant(item?.variants?.[0] || null);
+    setQty(1);
+  }, [item]);
+
+  if (!item) return null;
+
+  // Time Restriction & Availability Logic
+  const isSoldOut = item.status === "sold_out";
+  const orderable = isItemOrderableNow(item.categoryName);
+  const isBlocked = isSoldOut || !orderable;
+  const price = variant?.price ?? 0;
+
+  function handleAddToCart() {
+    if (isBlocked) return;
+    addItem({
+      id: item.id,
+      name: item.name,
+      price,
+      variantId: variant?.id ?? null,
+      variantName: variant?.name ?? null,
+      image: item.images?.[0],
+      categoryName: item.categoryName,
+      quantity: qty,
+    });
+    onToast?.(`${item.name} added to cart`);
+  }
+
+  async function handleSubmitReview(e) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.comment.trim()) return;
+    setSubmitting(true);
+    const review = await submitReview({ itemId: item.id, ...form });
+    setReviews((prev) => [review, ...prev]);
+    setForm({ name: "", rating: 5, comment: "" });
+    setSubmitting(false);
+    onToast?.("Review submitted, thank you!");
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-40 md:pb-24 min-h-screen bg-gray-50/30">
+      
+      {/* Detail Wrapper Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-14 pt-4 md:pt-8 items-start">
+        
+        {/* 1. Image Showcase Area */}
+        <div className="relative h-72 sm:h-96 md:h-[32rem] rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.08)] group">
+          <img 
+            src={item.images?.[0]} 
+            alt={item.name} 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          
+          {/* Mobile Glassmorphic Back Action */}
+          <button
+            onClick={onBack}
+            className="absolute top-5 left-5 w-11 h-11 rounded-2xl bg-white/95 border border-white/20 backdrop-blur-md flex items-center justify-center shadow-lg text-gray-800 hover:text-gold-500 transition-all active:scale-90 md:hidden z-10"
+          >
+            <ArrowLeft size={20} />
+          </button>
+        </div>
+
+        {/* 2. Culinary Specific Content Panel */}
+        <div className="space-y-6 md:pt-2">
+          <button
+            onClick={onBack}
+            className="hidden md:inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gold-600 transition-colors group mb-2"
+          >
+            <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> Back to Menu
+          </button>
+
+          <div>
+            {/* Badges Layout */}
+            <div className="flex items-center gap-3 mb-2.5">
+              <VegBadge type={item.veg_type} size={18} />
+              {item.spice_level && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-primary-50 text-primary-600 border border-primary-100/70 text-xs font-bold uppercase tracking-wider">
+                  <Flame size={13} className="fill-primary-500 text-primary-500" /> {SPICE_LABEL[item.spice_level]}
+                </span>
+              )}
+            </div>
+
+            <h1 className="font-display font-black text-3xl md:text-5xl text-gray-950 tracking-tight leading-tight">
+              {item.name}
+            </h1>
+            
+            {/* Rating Stars Inline */}
+            <div className="flex items-center gap-2 mt-2.5">
+              <Stars rating={item.rating} size={14} />
+              <span className="text-xs font-bold text-gray-500">({item.rating || "0.0"})</span>
+            </div>
+            
+            <p className="text-sm md:text-base text-gray-600 mt-4 leading-relaxed font-medium">
+              {item.description}
+            </p>
+          </div>
+
+          {/* Availability Status Banners */}
+          {isSoldOut && (
+            <div className="bg-rose-50 text-rose-600 border border-rose-100 text-sm font-bold rounded-2xl px-4 py-3 text-center shadow-sm">
+              Currently Unavailable (Sold Out)
+            </div>
+          )}
+          {!isSoldOut && !orderable && (
+            <div className="bg-gold-500/10 border border-gold-500/20 text-gold-900 text-sm font-bold rounded-2xl px-4 py-3 text-center shadow-sm flex items-center justify-center gap-2">
+              <Clock size={16} className="text-gold-600" />
+              <span>{getUnavailableReason(item.categoryName)}</span>
+            </div>
+          )}
+
+          {/* Dynamic Variant Selection Tabs */}
+          {item.variants?.length > 1 && (
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-gray-700 tracking-wider uppercase px-1">
+                Choose Portion Size
+              </label>
+              <div className="flex gap-2.5 flex-wrap">
+                {item.variants.map((v) => {
+                  const isSelected = variant?.id === v.id;
+                  return (
+                    <button
+                      key={v.id}
+                      onClick={() => setVariant(v)}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition-all duration-300 ${
+                        isSelected
+                          ? "bg-gradient-to-r from-primary-600 to-primary-700 border-gold-600 text-white shadow-md shadow-primary-500/10 scale-105"
+                          : "border-gray-200 bg-white text-gray-600 hover:border-gold-400 hover:text-gold-500"
+                      }`}
+                    >
+                      {v.name} · ₹{v.price}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Price & Micro-Quantity Workspace */}
+          <div className="flex items-center justify-between bg-white border border-gray-100/80 rounded-3xl p-4 shadow-[0_10px_30px_rgba(0,0,0,0.02)]">
+            <div>
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Subtotal</span>
+              <span className="font-display font-black text-2xl text-gray-900">₹{price * qty}</span>
+            </div>
+            
+            <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-full p-1.5">
+              <button
+                onClick={() => setQty((q) => Math.max(1, q - 1))}
+                className="w-8 h-8 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center transition-transform active:scale-90"
+              >
+                <Minus size={13} className="text-gray-700" />
+              </button>
+              <span className="font-bold text-gray-900 w-5 text-center text-sm">{qty}</span>
+              <button
+                onClick={() => setQty((q) => q + 1)}
+                className="w-8 h-8 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center transition-transform active:scale-90"
+              >
+                <Plus size={13} className="text-gray-700" />
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Checkouts Action Layer */}
+          <div className="hidden md:flex gap-4">
+            <button
+              onClick={handleAddToCart}
+              disabled={isBlocked}
+              className="flex-1 py-4 rounded-2xl border-2 border-gold-500 text-gold-600 font-bold text-sm hover:bg-gold-50/50 disabled:opacity-40 disabled:pointer-events-none transition-all active:scale-[0.99]"
+            >
+              Add to Basket
+            </button>
+            <button
+              onClick={() => {
+                handleAddToCart();
+                onGoToCart?.();
+              }}
+              disabled={isBlocked}
+              className="group flex-1 py-4 rounded-2xl bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold text-sm tracking-wide shadow-lg shadow-primary-500/10 disabled:opacity-40 disabled:pointer-events-none transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
+            >
+              Order Now
+              <ShoppingBag size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Review Workspace Module */}
+      <div className="mt-16 md:mt-24 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-start border-t border-gray-100 pt-10">
+        
+        {/* Reviews Feed List */}
+        <div className="space-y-4">
+          <h3 className="font-display font-black text-xl md:text-2xl text-gray-900 tracking-tight flex items-center gap-1.5 mb-2">
+            <Sparkles size={18} className="text-gold-500" /> Taste Testimonials
+          </h3>
+          
+          {reviews.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200 text-gray-400 text-sm">
+              No reviews yet for this dish. Be the first to praise it!
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {reviews.map((r) => (
+                <div key={r.id} className="transition-transform duration-300 hover:-translate-y-0.5">
+                  <ReviewCard review={r} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Premium Write a Review Sticky Layout */}
+        <form
+          onSubmit={handleSubmitReview}
+          className="bg-white rounded-3xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] p-5 space-y-4 lg:sticky lg:top-28"
+        >
+          <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider pb-2 border-b border-gray-100">
+            Review This Dish
+          </h4>
+          
+          <div className="relative group">
+            <User size={16} className="absolute left-4 top-3.5 text-gray-400 group-focus-within:text-gold-500 transition-colors" />
+            <input
+              type="text"
+              placeholder="Your Name"
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              className="w-full bg-gray-50/50 border border-gray-200/80 rounded-xl pl-11 pr-4 py-3 text-sm font-medium outline-none transition-all focus:bg-white focus:border-gold-500 focus:ring-4 focus:ring-gold-500/10"
+              required
+            />
+          </div>
+
+          {/* Interactive Rating Box */}
+          <div className="bg-gray-50/50 border border-gray-200/60 rounded-xl p-3 flex flex-col items-center gap-1.5">
+            <span className="text-[10px] font-bold text-gray-400 tracking-wider uppercase">Your Rating</span>
+            <div className="flex gap-1.5">
+              {[1, 2, 3, 4, 5].map((star) => {
+                const isFilled = hoveredStar ? star <= hoveredStar : star <= form.rating;
+                return (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, rating: star }))}
+                    onMouseEnter={() => setHoveredStar(star)}
+                    onMouseLeave={() => setHoveredStar(0)}
+                    className="transition-transform duration-150 hover:scale-125 focus:outline-none"
+                  >
+                    <Star
+                      size={20}
+                      className={`transition-colors duration-200 ${
+                        isFilled ? "text-gold-400 fill-gold-400" : "text-gray-300 fill-transparent"
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="relative group">
+            <MessageSquare size={16} className="absolute left-4 top-4 text-gray-400 group-focus-within:text-gold-500 transition-colors" />
+            <textarea
+              placeholder="How did you like the flavor, portion, spice...?"
+              value={form.comment}
+              onChange={(e) => setForm((f) => ({ ...f, comment: e.target.value }))}
+              rows={3}
+              className="w-full bg-gray-50/50 border border-gray-200/80 rounded-xl pl-11 pr-4 py-3 text-sm font-medium outline-none transition-all focus:bg-white focus:border-gold-500 focus:ring-4 focus:ring-gold-500/10 resize-none"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting || !form.name.trim() || !form.comment.trim()}
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 text-white text-sm font-bold shadow-md tracking-wide disabled:opacity-40 transition-all hover:scale-[1.01] flex items-center justify-center gap-2"
+          >
+            {submitting ? "Publishing..." : "Publish Review"}
+            <Send size={14} />
+          </button>
+        </form>
+      </div>
+
+      {/* 4. Mobile Fixed Bottom Action Overlay */}
+      <div className="fixed bottom-16 md:hidden left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100/80 p-4 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.04)]">
+        <div className="max-w-xl mx-auto flex gap-3">
+          <button
+            onClick={handleAddToCart}
+            disabled={isBlocked}
+            className="flex-1 py-3.5 rounded-xl border-2 border-gold-500 text-gold-600 font-bold text-sm active:scale-95 transition-transform disabled:opacity-40 bg-white"
+          >
+            Add to Basket
+          </button>
+          <button
+            onClick={() => {
+              handleAddToCart();
+              onGoToCart?.();
+            }}
+            disabled={isBlocked}
+            className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold text-sm active:scale-95 transition-transform shadow-md shadow-primary-500/10 disabled:opacity-40"
+          >
+            Order Now
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
