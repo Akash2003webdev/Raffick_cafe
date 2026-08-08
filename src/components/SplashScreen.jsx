@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 
-// Set fallback timer to 6 seconds (6000ms)
-const DISPLAY_MS = 6000; 
+// Drop your splash videos at: public/ folder
+// Vercel fix: Removed "/public" from the path so it references the root folder on production
+const DESKTOP_VIDEO_SRC = "/splash.mp4"; // Window/Desktop screen video
+const MOBILE_VIDEO_SRC = "/splash-mobile.mp4"; // Mobile screen video
+
+// 6 minutes hard cap in milliseconds (6 * 60 * 1000)
+const MAX_DURATION = 3600000;
 
 export default function SplashScreen({ onFinish }) {
   const [fadingOut, setFadingOut] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const videoRef = useRef(null);
   const timerRef = useRef(null);
   const finishedRef = useRef(false);
 
@@ -16,36 +23,55 @@ export default function SplashScreen({ onFinish }) {
   }
 
   useEffect(() => {
-    // This acts as a fallback just in case the video fails to load or play
-    timerRef.current = setTimeout(finish, DISPLAY_MS);
-    return () => clearTimeout(timerRef.current);
+    // 1. Initial screen size check & listener loop setup
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 767);
+    };
+    
+    checkScreenSize(); // Initial check run setup
+    window.addEventListener("resize", checkScreenSize);
+
+    // 2. Hard timeout fallback timer
+    timerRef.current = setTimeout(finish, MAX_DURATION);
+
+    return () => {
+      window.removeEventListener("resize", checkScreenSize);
+      clearTimeout(timerRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 3. Trigger video load logic on state change
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.load();
+      videoRef.current.play().catch((err) => {
+        console.log("Autoplay blocked or load issue caught:", err);
+      });
+    }
+  }, [isMobile]);
+
   return (
     <div
-      onClick={finish} // Allows user to tap to skip the video
-      className={`fixed inset-0 z-[10000] bg-black flex flex-col items-center justify-center overflow-hidden transition-opacity duration-400 ${
+      onClick={finish}
+      className={`fixed inset-0 z-[10000] bg-[#e2e2e2] flex items-center justify-center overflow-hidden transition-opacity duration-400 ${
         fadingOut ? "opacity-0" : "opacity-100"
       }`}
     >
-      <video
-        autoPlay
-        muted // Muted is REQUIRED for autoplay to work on mobile browsers (like Safari/Chrome)
-        playsInline // REQUIRED for iOS so it doesn't open in fullscreen player automatically
-        onEnded={finish} // Automatically triggers the fade-out exactly when the video ends
-        onError={finish} // No splash video file present yet — skip straight to the app
-        className="absolute inset-0 w-full h-full object-cover"
-      >
-        {/* Mobile Video: Plays on screens up to 768px wide directly from public folder */}
-        <source src="/public/splash-mobile.mp4" media="(max-width: 768px)" type="video/mp4" />
-        
-        {/* Desktop Video: Plays on screens 769px and wider directly from public folder */}
-        <source src="/public/splash.mp4" media="(min-width: 769px)" type="video/mp4" />
-        
-        {/* Fallback text if browser doesn't support video */}
-        Your browser does not support the video tag.
-      </video>
+      <div className="relative w-full h-full">
+        {/* Dynamic Responsive Video component - Made Full Screen */}
+        <video
+          ref={videoRef}
+          key={isMobile ? "mobile" : "desktop"} // Forces component re-mount to load source updates instantly
+          className="absolute inset-0 w-full h-full object-cover z-10"
+          src={isMobile ? MOBILE_VIDEO_SRC : DESKTOP_VIDEO_SRC}
+          autoPlay
+          muted
+          playsInline
+          onEnded={finish}
+          onError={finish}
+        />
+      </div>
     </div>
   );
 }

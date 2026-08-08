@@ -144,7 +144,7 @@ export default function HomePage({
         </div>
 
         {!search.trim() && (
-          <div className="relative mb-8 w-full overflow-hidden rounded-[18px] bg-[#21150f] shadow-[0_28px_70px_rgba(91,44,10,0.20)] md:rounded-[28px]">
+          <div className="relative mb-8 w-full overflow-hidden rounded-[18px]  shadow-[0_28px_70px_rgba(91,44,10,0.20)] md:rounded-[28px]">
             <div className="aspect-[6/4] w-full sm:aspect-[16/8] md:aspect-[16/7] lg:aspect-[16/6] [&>*]:h-full [&>*]:w-full">
               <BannerCarousel banners={banners} />
             </div>

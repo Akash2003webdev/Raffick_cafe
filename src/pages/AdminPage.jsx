@@ -58,7 +58,7 @@ import {
   uploadOfferImage,
 } from "../lib/api";
 
-const ADMIN_USER = "satturfoodexpress";
+const ADMIN_USER = "raffick";
 const ADMIN_PASS = "123456";
 
 const TABS = [

@@ -254,7 +254,7 @@ export const itemReviews = {
 // ----------------------------------------------------------------------------
 
 export const banners = [
-  { id: "banner-1", image: "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1200&q=80", link: null, sort_order: 1, status: "active" },
+  { id: "banner-1", image: "/src/assets/13bbf49b-bae3-4bee-86b9-d26ecf619bef.png", link: null, sort_order: 1, status: "active" },
   { id: "banner-2", image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1200&q=80", link: null, sort_order: 2, status: "active" },
   { id: "banner-3", image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1200&q=80", link: null, sort_order: 3, status: "active" },
 ];
