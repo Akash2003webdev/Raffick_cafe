@@ -336,7 +336,7 @@ export default function HomePage({
               <div className="overflow-hidden rounded-[30px] border border-orange-100/70 bg-white shadow-[0_20px_55px_rgba(70,35,12,0.08)]">
                 <iframe
                   title="Raffick Cafe location"
-                  src="https://www.google.com/maps?q=Raffick+Cafe+Sattur+Tamil+Nadu&output=embed"
+                  src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3936.787368875533!2d77.91861007450197!3d9.352075283849151!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zOcKwMjEnMDcuNSJOIDc3wrA1NScxNi4zIkU!5e0!3m2!1sen!2sin!4v1786631050496!5m2!1sen!2sin"
                   width="100%"
                   height="390"
                   style={{ border: 0 }}
@@ -361,7 +361,7 @@ export default function HomePage({
                 </div>
 
                 <a
-                  href="https://maps.google.com/?q=Raffick+Cafe+Sattur+Tamil+Nadu"
+                  href="https://www.google.com/maps?q=9.3520833,77.9211944"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#e85d1e] to-[#ff8a2a] px-6 py-3.5 text-sm font-black text-white shadow-[0_12px_28px_rgba(234,88,12,0.24)] transition hover:-translate-y-0.5"
@@ -370,6 +370,15 @@ export default function HomePage({
                   Open in Google Maps
                 </a>
               </div>
+            </section>
+
+            {/* Crawlable local information and internal links */}
+            <section className="rounded-[28px] border border-orange-100 bg-white p-6 shadow-[0_15px_45px_rgba(70,35,12,0.05)] md:p-8">
+              <h2 className="font-display text-2xl font-black text-stone-900">Cafe in Sattur · சாத்தூரில் ராஃபிக் கஃபே</h2>
+              <p className="mt-3 max-w-4xl text-sm leading-7 text-stone-600 md:text-base">
+                Raffick Cafe on Old Trunk Road, Sattur serves fresh coffee, burgers, pasta, pizza, rice, noodles, shakes and desserts for friends and families. சாத்தூரில் நண்பர்கள் மற்றும் குடும்பத்துடன் coffee, snacks மற்றும் tasty food enjoy செய்ய ஏற்ற cafe.
+              </p>
+              
             </section>
           </>
         )}

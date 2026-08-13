@@ -3,6 +3,7 @@ import { ArrowLeft, Sparkles, Utensils } from "lucide-react";
 import MenuItemCard from "../components/MenuItemCard";
 import { getMenuItems } from "../lib/api";
 import { useSEO } from "../lib/seo";
+import { SITE_URL } from "../lib/seo";
 
 export default function CategoryPage({ category, onBack, onSelectItem, onToast }) {
   useSEO({
@@ -13,6 +14,14 @@ export default function CategoryPage({ category, onBack, onSelectItem, onToast }
       ? `${category.name} at Raffick Cafe, Sattur. Order online for takeaway, delivery, or drive-through.`
       : "Browse this menu category at Raffick Cafe, Sattur.",
     path: category ? `/category/${category.id}` : undefined,
+    structuredData: category ? {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: `${category.name} at Raffick Cafe`,
+      description: `${category.name} menu at Raffick Cafe, Sattur.`,
+      url: `${SITE_URL}/category/${category.id}`,
+      isPartOf: { "@id": `${SITE_URL}/#website` }
+    } : undefined,
   });
 
   const [items, setItems] = useState([]);

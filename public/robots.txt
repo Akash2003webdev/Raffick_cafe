@@ -1,2 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /cart
+Disallow: /admin
+
+Sitemap: https://raffickcafe.com/sitemap.xml

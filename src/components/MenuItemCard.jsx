@@ -49,6 +49,10 @@ export default function MenuItemCard({ item, onClick, onToast, badge }) {
         <img
           src={item.images?.[0]}
           alt={item.name}
+          width="500"
+          height="400"
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
 

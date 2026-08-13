@@ -67,7 +67,12 @@ export default function BannerCarousel({
             {banner.image ? (
               <img
                 src={banner.image}
-                alt={`Promo banner ${i + 1}`}
+                alt={`Raffick Cafe offer banner ${i + 1}`}
+                width="1200"
+                height="630"
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding="async"
+                fetchPriority={i === 0 ? "high" : "auto"}
                 className="block w-full h-full object-cover"
               />
             ) : (

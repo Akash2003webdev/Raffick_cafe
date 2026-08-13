@@ -51,6 +51,10 @@ export default function CategoryShowcase({
                 <img
                   src={cat.image}
                   alt={cat.name}
+                  width="160"
+                  height="160"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover transform transition-transform duration-700 ease-out group-hover:scale-110"
                 />
                 

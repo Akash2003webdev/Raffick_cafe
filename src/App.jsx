@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -20,10 +20,11 @@ import CartPage from "./pages/CartPage";
 import ReviewsPage from "./pages/ReviewsPage";
 import EnquiryPage from "./pages/EnquiryPage";
 import OffersPage from "./pages/OffersPage";
-import AdminPage from "./pages/AdminPage";
+const AdminPage = lazy(() => import("./pages/AdminPage"));
 import SplashScreen from "./components/SplashScreen";
 import { getCategoryById, getMenuItemById } from "./lib/api";
 import { useEffect } from "react";
+import NotFoundPage from "./pages/NotFoundPage";
 
 // Maps bottom-nav / header nav keys to real URLs, and back again — kept so
 // Header.jsx / BottomNav.jsx don't need to change their onNavigate(key) API.
@@ -149,13 +150,18 @@ function AppShell() {
         <Route path="/reviews" element={<ReviewsPage onToast={showToast} />} />
         <Route path="/enquiry" element={<EnquiryPage onToast={showToast} />} />
         <Route path="/offers" element={<OffersPage onToast={showToast} />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
 
       {!isItemPage && <FloatingWhatsApp onNavigate={goTo} />}
 
       <BottomNav activePage={activePage} onNavigate={goTo} />
 
-      {showAdmin && <AdminPage onClose={() => setShowAdmin(false)} />}
+      {showAdmin && (
+        <Suspense fallback={null}>
+          <AdminPage onClose={() => setShowAdmin(false)} />
+        </Suspense>
+      )}
 
       <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
     </div>

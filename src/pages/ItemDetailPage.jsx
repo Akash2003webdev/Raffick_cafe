@@ -19,6 +19,7 @@ import { useCart } from "../context/CartContext";
 import { getItemReviews, submitReview } from "../lib/api";
 import { isItemOrderableNow, getUnavailableReason } from "../lib/timeRestrictions";
 import { useSEO } from "../lib/seo";
+import { SITE_URL } from "../lib/seo";
 
 const SPICE_LABEL = { mild: "Mild", medium: "Medium", spicy: "Spicy" };
 
@@ -31,6 +32,24 @@ export default function ItemDetailPage({ item, onBack, onToast, onGoToCart }) {
       ? `${item.name}${item.description ? " - " + item.description : ""} — order online from Raffick Cafe, Sattur. Takeaway & home delivery available.`
       : "Order this dish online from Raffick Cafe, Sattur.",
     path: item ? `/item/${item.id}` : undefined,
+    type: "product",
+    image: item?.images?.[0],
+    structuredData: item ? {
+      "@context": "https://schema.org",
+      "@type": "MenuItem",
+      name: item.name,
+      description: item.description,
+      image: item.images?.[0],
+      url: `${SITE_URL}/item/${item.id}`,
+      suitableForDiet: item.veg_type === "veg" ? "https://schema.org/VegetarianDiet" : undefined,
+      offers: {
+        "@type": "Offer",
+        priceCurrency: "INR",
+        price: item.variants?.[0]?.price,
+        availability: item.status === "sold_out" ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+        url: `${SITE_URL}/item/${item.id}`
+      }
+    } : undefined,
   });
 
   const { addItem } = useCart();
@@ -92,6 +111,10 @@ export default function ItemDetailPage({ item, onBack, onToast, onGoToCart }) {
           <img 
             src={item.images?.[0]} 
             alt={item.name} 
+            width="800"
+            height="800"
+            decoding="async"
+            fetchPriority="high"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />

@@ -103,6 +103,10 @@ export default function MenuPage({ onSelectCategory }) {
                   <img
                     src={cat.image}
                     alt={cat.name}
+                    width="400"
+                    height="300"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transform scale-100 group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-stone-900/20 via-transparent to-transparent opacity-60" />
