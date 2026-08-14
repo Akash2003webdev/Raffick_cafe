@@ -2,27 +2,18 @@
 // components already call, so no component code had to change.
 
 import { supabase } from "./supabaseClient";
-import {
-  restaurantInfo,
-  categories as sampleCategories,
-  menuItems as sampleMenuItems,
-  overallReviews as sampleOverallReviews,
-  itemReviews as sampleItemReviews,
-  banners as sampleBanners,
-  offers as sampleOffers,
-} from "./data";
+import { restaurantInfo } from "./data";
 
-// Sample data acts as a fallback while the real Supabase tables are being
-// populated — see src/lib/data.js. Once real rows exist, they're used
-// automatically and this fallback is never hit.
-async function withFallback(queryFn, fallbackValue) {
+// Runs a Supabase query and falls back to an empty value on failure instead
+// of crashing the UI (e.g. network hiccup, RLS misconfig). No mock/sample
+// data involved — this is purely a safety net.
+async function safeQuery(queryFn, emptyValue) {
   try {
     const data = await queryFn();
-    if (Array.isArray(data) && data.length === 0) return fallbackValue;
-    return data ?? fallbackValue;
+    return data ?? emptyValue;
   } catch (err) {
-    console.warn("Supabase query failed, using sample data:", err?.message || err);
-    return fallbackValue;
+    console.error("Supabase query failed:", err?.message || err);
+    return emptyValue;
   }
 }
 
@@ -45,7 +36,7 @@ export async function getRestaurantInfo() {
 }
 
 export async function getCategories() {
-  return withFallback(async () => {
+  return safeQuery(async () => {
     const { data, error } = await supabase
       .from("categories")
       .select("*")
@@ -53,35 +44,17 @@ export async function getCategories() {
       .order("sort_order", { ascending: true });
     if (error) throw error;
     return data || [];
-  }, sampleCategories);
+  }, []);
 }
 
 export async function getCategoryById(id) {
-  const fromSample = sampleCategories.find((c) => c.id === id);
-  try {
-    const { data, error } = await supabase.from("categories").select("*").eq("id", id).single();
-    if (error) throw error;
-    return data || fromSample;
-  } catch (err) {
-    if (fromSample) return fromSample;
-    throw err;
-  }
+  const { data, error } = await supabase.from("categories").select("*").eq("id", id).single();
+  if (error) throw error;
+  return data;
 }
 
 export async function getMenuItems({ categoryId, search } = {}) {
-  function filterSample() {
-    let items = sampleMenuItems;
-    if (categoryId) items = items.filter((i) => i.category_id === categoryId);
-    if (search) {
-      const q = search.toLowerCase();
-      items = items.filter(
-        (i) => i.name.toLowerCase().includes(q) || i.description?.toLowerCase().includes(q)
-      );
-    }
-    return items;
-  }
-
-  return withFallback(async () => {
+  return safeQuery(async () => {
     let query = supabase
       .from("menu_items")
       .select("*, variants:menu_item_variants(*), category:categories(name)");
@@ -90,27 +63,21 @@ export async function getMenuItems({ categoryId, search } = {}) {
     const { data, error } = await query.order("created_at", { ascending: true });
     if (error) throw error;
     return (data || []).map(normalizeItem);
-  }, filterSample());
+  }, []);
 }
 
 export async function getMenuItemById(id) {
-  const fromSample = sampleMenuItems.find((i) => i.id === id);
-  try {
-    const { data, error } = await supabase
-      .from("menu_items")
-      .select("*, variants:menu_item_variants(*), category:categories(name)")
-      .eq("id", id)
-      .single();
-    if (error) throw error;
-    return data ? normalizeItem(data) : fromSample;
-  } catch (err) {
-    if (fromSample) return fromSample;
-    throw err;
-  }
+  const { data, error } = await supabase
+    .from("menu_items")
+    .select("*, variants:menu_item_variants(*), category:categories(name)")
+    .eq("id", id)
+    .single();
+  if (error) throw error;
+  return normalizeItem(data);
 }
 
 export async function getPopularItems(limit = 8) {
-  return withFallback(async () => {
+  return safeQuery(async () => {
     const { data, error } = await supabase
       .from("menu_items")
       .select("*, variants:menu_item_variants(*), category:categories(name)")
@@ -118,22 +85,22 @@ export async function getPopularItems(limit = 8) {
       .limit(limit);
     if (error) throw error;
     return (data || []).map(normalizeItem);
-  }, sampleMenuItems.slice().sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, limit));
+  }, []);
 }
 
 export async function getOverallReviews() {
-  return withFallback(async () => {
+  return safeQuery(async () => {
     const { data, error } = await supabase
       .from("overall_reviews")
       .select("*")
       .order("created_at", { ascending: false });
     if (error) throw error;
     return (data || []).map(normalizeReview);
-  }, sampleOverallReviews);
+  }, []);
 }
 
 export async function getItemReviews(itemId) {
-  return withFallback(async () => {
+  return safeQuery(async () => {
     const { data, error } = await supabase
       .from("item_reviews")
       .select("*")
@@ -141,7 +108,7 @@ export async function getItemReviews(itemId) {
       .order("created_at", { ascending: false });
     if (error) throw error;
     return (data || []).map(normalizeReview);
-  }, sampleItemReviews[itemId] || []);
+  }, []);
 }
 
 export async function submitReview({ itemId, name, rating, comment }) {
@@ -208,7 +175,7 @@ export async function getEnquiries() {
 // ----------------------------------------------------------------------------
 
 export async function getBanners() {
-  return withFallback(async () => {
+  return safeQuery(async () => {
     const { data, error } = await supabase
       .from("banners")
       .select("*")
@@ -216,7 +183,7 @@ export async function getBanners() {
       .order("sort_order", { ascending: true });
     if (error) throw error;
     return data || [];
-  }, sampleBanners);
+  }, []);
 }
 
 export async function getAllBanners() {
@@ -286,7 +253,7 @@ function normalizeOffer(row) {
 }
 
 export async function getOffers() {
-  return withFallback(async () => {
+  return safeQuery(async () => {
     const { data, error } = await supabase
       .from("offers")
       .select(OFFER_SELECT)
@@ -294,7 +261,7 @@ export async function getOffers() {
       .order("sort_order", { ascending: true });
     if (error) throw error;
     return (data || []).map(normalizeOffer);
-  }, sampleOffers);
+  }, []);
 }
 
 export async function getAllOffers() {

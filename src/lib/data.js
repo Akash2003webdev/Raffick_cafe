@@ -1,15 +1,9 @@
 // ----------------------------------------------------------------------------
-// Static + SAMPLE data for Raffick Cafe.
+// Static config for Raffick Cafe.
 //
-// `restaurantInfo` is genuinely static (doesn't need its own DB table).
-// Everything else below (categories, menuItems, reviews, banners, offers) is
-// SAMPLE/DEMO data used as a fallback in src/lib/api.js — whenever a Supabase
-// table is empty or not reachable yet, the UI falls back to this file so the
-// app is fully browsable while the real backend is being populated.
-//
-// Once real rows exist in Supabase (see supabase/schema.sql), they take over
-// automatically — nothing else needs to change. Feel free to edit/replace
-// this file any time; it's just placeholder content.
+// Everything here is genuinely static (doesn't need a DB table). All menu
+// content — categories, menu items, reviews, banners, offers — now comes
+// straight from Supabase (see src/lib/api.js and supabase/schema.sql).
 // ----------------------------------------------------------------------------
 
 export const restaurantInfo = {
@@ -33,8 +27,3 @@ export const features = [
   { key: "quality", label: "Quality Food", desc: "Always the Best" },
   { key: "service", label: "Fast Service", desc: "Just for You" },
 ];
-
-// ----------------------------------------------------------------------------
-// Categoriesyvujnfewiowhgygbhniqswdmnikmas
-// ----------------------------------------------------------------------------
-
