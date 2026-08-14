@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node --env-file=.env scripts/generate-seo.mjs",
+    "prebuild": "node scripts/generate-seo.mjs",
     "build": "vite build",
-    "postbuild": "node --env-file=.env scripts/prerender.mjs",
+    "postbuild": "node scripts/prerender.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
